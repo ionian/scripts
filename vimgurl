@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# retrieve blog image link (called from Vim)
+
+image="$1"
+dir="$HOME/VCS/octopress/source/images/post_images/"
+url=$(find "$dir" -name *"${image}*")
+
+if [[ -n $url ]]; then
+	stub="${url##*/}"
+	printf '%s' "images/post_images/${stub}"
+else
+	exit 1
+fi

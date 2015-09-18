@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# script to push IRC highlight notifications
+
+dir="$HOME/.config/irssi/"
+file="$dir"/fnotified
+
+while inotifywait -qqre attrib "$dir" >/dev/null 2>&1; do
+    msg=$(awk 'END{print $1}' "$file")
+    printf "%s\n" "^fg(#CF4F88)IRC: You have been pinged: ^fg(#BF85CC)${msg}" | dzen2 -p 5
+done
+

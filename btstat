@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# Bittorrent Sync API wrapper
+# Requires jshon http://kmkeen.com/jshon/
+
+# Copyright (c) 2013-2015 Jason W Ryan
+# The MIT License (MIT) http://opensource.org/licenses/MIT
+
+# change host & port if required
+host="192.168.1.200"
+port="8888"
+
+ext="$1"
+dir="$2"
+subdir="$3"
+url="http://${host}:${port}/api?method=get_${ext}"
+passfile="$XDG_CONFIG_HOME/Syncapp/passes"
+json=$(curl -s -n "$url")
+
+# some coloured output
+blue="$(tput bold; tput setaf 4)"
+green="$(tput bold; tput setaf 2)"
+norm="$(tput sgr0)"
+
+files(){
+  pass
+  local url="${url}${secret}"
+  [[ -n $subdir ]] && url="${url}&path=${subdir}"
+  # reload for new data
+  local json=$(curl -s -n "$url")
+  local opts=(-a -e name -u -pe state -u)
+  while {
+    read -r name
+    read -r state
+  }; do
+    if [[ $state != deleted ]]; then
+      printf "%s\n" "$name"
+    fi
+  done < <(jshon "${opts[@]}" <<< "$json")
+}
+
+folders(){
+  if [[ -n $dir ]]; then
+    pass
+    local url="${url}${secret}"
+    local json=$(curl -s -n "$url")
+  fi
+  local opts=(-a -e dir -up -e files -up -e size -u)
+  while {
+    read -r dir
+    read -r files
+    read -r size
+  }; do
+    units
+    printf "Directory: %s contains %d files totalling ${green}%d${norm}${unit}\n" \
+         "$dir" "$files" "$size"
+  done < <(jshon "${opts[@]}" <<<"$json")
+}
+
+pass(){
+  local -A passes
+
+  while read -r key secret; do
+    passes["$key"]="$secret"
+  done <"$passfile"
+
+  for k in "${!passes[@]}"; do
+    [[ $dir = $k ]] && secret="&secret=${passes[$k]}"
+  done
+}
+
+speed(){
+  local opts=(-e download -upe upload)
+  while {
+      read -r down
+      read -r up
+  }; do
+    printf "Download: ${green}%dkB/s${norm} Upload: ${blue}%dkB/s${norm}\n" "$down" "$up"
+  done < <(jshon "${opts[@]}" <<<"$json")
+}
+
+vers(){
+ local opts=(-e version -u)
+ jshon "${opts[@]}" <<<"$json"
+}
+
+units() {
+  if (( size < 1048576 )); then
+    div=1024; unit="Kb"
+  else
+    div=1048576; unit="Mb"
+  fi
+  size=$(( size / div ))
+}
+
+usage () {
+  cat <<EOF
+  Query Bittorrent Sync API from the command line
+  Options:
+    files    |   List all files in a shared directory
+                 - append path to see a subdirectory
+    folders  |   Print the details of sync'ed directories
+    speed    |   Show current Down/Up speed
+    version  |   Currently installed version
+    help     |   Show these options
+
+    Example: print the files in a subdirectory:
+    $ ${0##*/} files directory path/to/subdir
+EOF
+}
+
+case "$1" in
+  files)   files
+    ;;
+  folders) folders
+    ;;
+  speed)   speed
+    ;;
+  version) vers
+    ;;
+  *) usage && exit 1
+    ;;
+esac
+
+# vim:set ts=2 sts=2 sw=2 et:

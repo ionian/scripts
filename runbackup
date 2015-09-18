@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+# Backup to remote server over SSH
+# add user to sudoers on target for --rsync-path switch
+
+backupdirs=($HOME /etc /usr/local/bin)
+
+run_warning(){
+    DISPLAY=:0.0 echo "Backup to Sentinel is beginning…" | dzen2 -p 3
+}
+
+run_complete(){
+    DISPLAY=:0.0 echo "Backup to Sentinel has completed." | dzen2 -p 3
+}
+
+run_warning
+
+rsync -azP --delete --timeout=999 \
+    --exclude-from=/home/jason/Scripts/excludes.txt \
+    --log-file=/home/jason/.local/logs/rsync/$(date +%d%m%y).log \
+    -e ssh --rsync-path="sudo rsync" "${backupdirs[@]}" backups:Backups/Shiv
+
+run_complete
+

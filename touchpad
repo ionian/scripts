@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# toggle the touchpad
+
+state=$(awk '/TouchpadOff/ { print $3 }' <(synclient -l))
+
+case "$state" in
+    0) synclient touchpadoff=1
+        printf '%s\n' "Touchpad toggled off" | dzen2 -p 3
+        ;;
+    1) synclient touchpadoff=0
+       printf '%s\n' "Touchpad toggled on" | dzen2 -p 3
+       ;;
+   *) exit 1
+       ;;
+esac
+

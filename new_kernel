@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# install new kernel
+
+# Copyright (c) 2013-2015 Jason W Ryan
+# The MIT License (MIT) http://opensource.org/licenses/MIT
+
+# colours
+cyn="$(tput bold; tput setaf 6)"
+ylw="$(tput bold; tput setaf 3)"
+red="$(tput bold; tput setaf 1)"
+end="$(tput sgr0)"
+
+if (( $# != 1 )); then
+	printf '%s\n' "Usage: "${0##*/}" 3.10.8"
+	exit 1
+fi
+
+vers="$1"
+
+# back up last dir
+cd ~/Build
+rm -rf linux-jwr/{pkg,src}
+mv linux-jwr linux-${vers%.*}.$((${vers##*.} - 1))
+
+# set up clean files
+cp -r kernel_files linux-jwr && cd $_
+
+# update PKGBUILD
+sed -i "s:pkgver=[0-9].*:pkgver=${vers}:" PKGBUILD
+newvers=$(awk -F= '/pkgver=/ {print $2}' PKGBUILD)
+srcvers=$(awk -F- '/_srcname=/ {print $2}' PKGBUILD)
+printf '%s\n' "Package version updated to ${ylw}$newvers${end}"
+
+# check for .0 release
+if [[ $vers =~ ^[0-9].[0-9]{1,2}$ ]]; then
+    upvers="${newvers}"
+
+    # don't patch .0 releases
+    sed -i "/linux\/patch/d" PKGBUILD
+    sed -i "/upstream/,+2 d" PKGBUILD
+else
+    upvers="${newvers%.*}"
+fi
+
+if [[ $srcvers != $upvers ]]; then
+    sed -i "s:_srcname=linux-[0-9].*:_srcname=linux-${upvers}:" PKGBUILD
+    printf '%s\n' "Source name updated to ${cyn}${upvers}"
+fi
+
+printf '%s\n' "${cyn}Updating checksums…${end}"
+/usr/bin/updpkgsums
+
+if (( $? != 0 )); then
+	printf '%s\n' "${red}Checksum failed${end}"
+	exit 1
+else
+	printf '%s\n' "${cyn}Starting build…${end}"
+	/usr/bin/time /usr/bin/makepkg -i
+fi
+cd
+

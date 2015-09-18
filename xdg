@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# edit dotfiles
+# heavy lifting by falconindy: https://bbs.archlinux.org/viewtopic.php?id=128585
+
+dirs=($HOME/.$1* $HOME/.$1/ $XDG_CONFIG_HOME/$1/)
+IFS=$'\n'
+
+read -r -d '' -a files < \
+  <(find "${dirs[@]}" -type f \( \
+       -name "*.conf" \
+    -o -name "*.cfg" \
+    -o -name "*rc" \
+    -o -regextype posix-extended -regex '.*/conf(ig|ig[.][a-z]{2,3})?$' \
+    \) 2>/dev/null)
+
+(( ${#files[*]} )) && "${EDITOR:-vi}" "${files}"
+
+# vim:set sw=2 ts=2 et:

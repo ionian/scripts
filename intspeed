@@ -1,0 +1,31 @@
+#!/usr/bin/awk -f
+# Show network speed.
+
+BEGIN {
+  iface = ARGV[1]
+  cmd = "cat /proc/net/dev"
+
+  while (1) {
+    while (cmd | getline) {
+      $0 ~ iface
+        recvd_bytes=$2
+        trnsd_bytes=$9
+    }
+
+    close(cmd)
+    system("sleep 2")
+
+    while (cmd | getline) {
+      $0 ~ iface
+        recvd_new=$2
+        trnsd_new=$9
+    }
+    close(cmd)
+    down = recvd_new - recvd_bytes
+    sent = trnsd_new - trnsd_bytes
+    printf ("Down: %.2f  ", down/1024)
+    printf ("Up: %.2f  \r", sent/1024)
+  }
+}
+
+# vim:set ts=2 sts=2 sw=2 et:

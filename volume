@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# volume controls and feedback
+
+up() {
+    amixer -q sset Master 5+ unmute
+}
+
+down() {
+    amixer -q sset Master 5- unmute
+}
+
+notify () {
+    vol=$(awk '/%/ {gsub(/[\[\]]/,""); print $4}' <(amixer sget Master))
+    printf '%s\n' "Volume set to ${vol}" | dzen2 -p 3
+}
+
+if [[ $1 = up ]]; then
+    up && notify
+elif [[ $1 = down ]]; then
+    down && notify
+fi
+

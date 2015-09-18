@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# board snippets in dmenu
+
+conf="$XDG_CONFIG_HOME/dmenu/dmenurc"
+[[ -r $conf ]] && . "$conf" || dmenucmd="dmenu -i"
+
+file="$HOME/.notes/arch"
+line=$(awk -F'[# ]' '/^# / {print $3}' "$file")
+snip=$(printf '%s\n' "${line[@]}" | "${dmenucmd[@]}" "$@")
+
+if [[ -n $snip ]]; then
+  awk -v quote="$snip" 'index($0, quote) {getline; print}' "$file" \
+      | xclip -selection clip
+fi

@@ -1,0 +1,19 @@
+#!/bin/bash
+# switch to external monitor
+
+laptop="eDP1"
+screen="HDMI1"
+mode="1024x768"
+external=$(xrandr -q | awk '/HDMI1/ {print $2}')
+
+if [[ $external = connected ]]; then
+  xrandr --output "$laptop" --auto --primary \
+    --output "$screen" --auto --right-of "$laptop"
+
+# for a projector
+#  xrandr --output "$laptop" --mode "$mode" \
+#    --output "$screen" --mode "$mode" --same-as "$laptop"
+
+else
+  xrandr --output "$laptop" --auto --output "$screen" --off 
+fi

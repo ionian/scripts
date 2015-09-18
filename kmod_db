@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# manage modules for kernel compilation
+# heavy lifting: falconindy
+
+# colours
+red=$'\e[01;31m' \
+ylw=$'\e[01;33m' \
+nrm=$'\e[0m'
+
+# find user's homedir and use it
+homedir="$(awk -F: '{print $6}' <(getent passwd $USER))"
+dbfile="${XDG_CONFIG_HOME:-$homedir/.config}"/kmod_db/modules_db
+ignorefile="${XDG_CONFIG_HOME:-$homedir/.config}"/kmod_db/ignore_modules
+
+declare -A moduledb
+
+[[ -r $dbfile ]] && . "$dbfile" || exit 1
+
+while read module _; do
+  moduledb["$module"]=1
+done </proc/modules
+
+# ignore stuff
+if [[ -r $ignorefile ]]; then
+  mapfile -t ignore <"$ignorefile"
+  for ign in "${ignore[@]}"; do
+    unset "moduledb[$ign]"
+  done
+fi
+
+load_modules(){
+  local number="${#moduledb[@]}"
+  for module in "${!moduledb[@]}"; do
+      sudo modprobe -a "$module"
+  done
+  printf "${red}%s${nrm}\n" "$Loaded $number modules"
+}
+
+print_modules() {
+  local number="${#moduledb[@]}"
+  printf "${ylw}%s${nrm}%s\n" "$number" " modules in db"
+}
+
+read_modules() {
+  declare -p moduledb >"$dbfile"
+}
+
+case "$1" in
+  load) load_modules
+      ;;
+ print) print_modules
+      ;;
+  read) read_modules
+      ;;
+     *) printf "%s\n" "load, print or read..."
+      ;;
+esac
+

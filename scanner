@@ -1,0 +1,40 @@
+#!/usr/bin/awk -f
+# print available networks
+# from defer: https://bbs.archlinux.org/viewtopic.php?pid=1451568#p1451568
+
+/^BSS/ {
+  MAC = $2
+  aps[MAC]["enc"] = "Open"
+}
+
+{
+  switch ($1) {
+     case /SSID/:
+       aps[MAC]["SSID"] = $2
+       break
+     case /freq/:
+       aps[MAC]["freq"] = $NF " MHz"
+       break
+     case /signal/:
+       aps[MAC]["sig"] = $2 " " $3
+       break
+     case /WEP/: 
+       aps[MAC]["enc"] = "WEP"
+       break
+     case /RSN/: 
+       aps[MAC]["enc"] = "RSN"
+       break
+     case /WPA/: 
+       aps[MAC]["enc"] = "WPA"
+    }
+}
+
+END {
+   printf "%-24s %-16s %-16s %-16s\n",
+     "SSID", "Frequency", "Signal", "Encryption"
+
+       for (ap in aps) {
+         printf "%-24s %-16s %-16s %-16s\n",
+           aps[ap]["SSID"], aps[ap]["freq"], aps[ap]["sig"], aps[ap]["enc"]
+        }
+}

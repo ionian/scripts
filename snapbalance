@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Return tarsnap balance
+
+read -p "Tarsnap username: " user
+read -s -p "Tarsnap password: " pass
+
+ wget --no-proxy --post-data="address=$user&password=$pass" --quiet \
+    -O - 'https://www.tarsnap.com/manage.cgi' |\
+    awk -F'[><]' '/balance/ {printf "\n\n%s\n", $3}'
+

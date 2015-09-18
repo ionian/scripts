@@ -1,0 +1,18 @@
+#!/usr/bin/awk -f
+# print uptime for tmux
+
+BEGIN {
+  while ("uptime" | getline)
+    gsub(/,/,"")
+    if (NF==10)
+      print $3
+    else if (NF==11)
+      print $3,$4
+    else if (NF==12)
+      print $3,$4,$5
+    else
+      print $3,$4,$5,$6
+  close("uptime")
+}
+
+# vim:set ts=2 sts=2 sw=2 et:

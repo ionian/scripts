@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Check currency of ABS packages
+# Snippet lifted from absent: http://aur.archlinux.org/packages.php?ID=50669
+# set ABSROOT in /etc/abs.conf to change $basedir
+
+mag=$'\e[1;35m'
+yel=$'\e[1;33m'
+cyn=$'\e[1;36m'
+red=$'\e[1;31m'
+end=$'\e[0m'
+basedir="/home/jason/Build/abs"
+searchdirs=("${basedir}/core" "${basedir}/extra" "${basedir}/community")
+
+[[ $# != 1 ]] && exit 1
+
+absversion() {
+  # vim is special; yes, this is truly ugly…
+  if [[ ${target#*s/} == extra/vim ]]; then
+    vim=($(awk '/^_topver/,/^pkgrel/' ${target}/PKGBUILD))
+    avers="${vim[0]:8}.${vim[1]:12}-${vim[5]:7}"
+  else
+    avers="$(awk -F= '/^pkg(v|r)/ {s=s (s?"-":"") $2} \
+              END {printf "%s", s}' ${target}/PKGBUILD)"
+  fi
+}
+
+for name in "$@"; do
+  for repo in "${searchdirs[@]}"; do
+    if [[ ( -d ${repo}/${name} && -f ${repo}/${name}/PKGBUILD ) ]]; then
+      target="${repo}/${name}"
+      repos="${repo##*/}"
+      rvers="$(awk '/Version/ {print $3}' <(pacman -Si ${name}))"
+      ivers="$(awk '/Version/ {print $3}' <(pacman -Qi ${name} 2>/dev/null))"
+      absversion
+
+      # synchronize repo
+      if [[ $avers < $rvers ]]; then
+        printf "%s\n\n" "Updating ABS $1 package…"
+        /usr/bin/abs "${target#*s/}" >/dev/null
+        absversion
+      fi
+
+      # print the current version details
+      printf "%s\n%s\n" "${yel}${repos^} version${end}" "$rvers"
+      printf "%s\n%s\n" "${mag}ABS version${end}" "$avers"
+
+      # locally installed?
+      if [[ -n $ivers ]]; then
+        printf "\n%s\n%s\n" "${cyn}Installed${end}" "$ivers"
+      else
+        printf "\n%s\n" "${red}${name} not installed…${end}"
+      fi
+    fi
+  done
+done
+

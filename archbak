@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# backup Archer files to Centurion
+
+# Copyright (c) 2013-2015 Jason W Ryan
+# The MIT License (MIT) http://opensource.org/licenses/MIT
+
+lan="$(ip addr | grep .110)"
+back="$HOME/Centurion/Archer"
+dirs=("$HOME/.config" "$HOME/Scripts" "$HOME/Build/dwm" "$HOME/Build/vimprobable2-git")
+
+if [[ -z $lan ]]; then 
+    printf "%s\n" "Not on home LAN; exiting…"
+    exit 1
+fi
+
+if [[ -d $back ]]; then
+    printf "%s\n" "Already mounted..."
+else
+    sudo mount.nfs 192.168.1.100:/home/jason $HOME/Centurion
+fi
+
+printf "%s\n" "Beginning sync..."
+
+rsync -Cazs --stats "${dirs[@]}" "${back}"
+
+sudo umount $HOME/Centurion
+
+printf "\n%s\n" "Unmounted..."
+
+exit 0

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# update syncthing (with code lifted from Dave Reisner's updpkgsums)
+
+release=$1
+buildfile=PKGBUILD
+sumtext=sha1sum.txt.asc
+url="https://github.com/syncthing/syncthing/releases/download/v${release}/${sumtext}"
+
+# update package version & provides
+sed -i "s:pkgver=[0-9].*:pkgver=${release}:" "$buildfile"
+sed -i "s:provides=('syncthing=[0-9].*'):provides=('syncthing=${release}'):" "$buildfile"
+
+curl -LO "$url"
+
+newsums=$( awk '
+  {
+    switch ($2) {
+      case /armv5/:
+        arm5 = $1
+        break
+      case /armv6/:
+        arm6 = $1
+        break
+      case /armv7/:
+        arm7 = $1
+        break
+      case /linux-386/:
+        i386 = $1
+        break
+      case /linux-amd64/:
+        x86 = $1
+        break
+      }
+  }
+END {
+  printf "case \"$CARCH\" in\n\t"\
+         "arm) _pkgarch=\"arm\"\n\t\tsha1sums+=(\047%s\047)\n\t\t;;\n\t"\
+         "armv6h) _pkgarch=\"arm\"\n\t\tsha1sums+=(\047%s\047)\n\t\t;;\n\t"\
+         "armv7h) _pkgarch=\"arm\"\n\t\tsha1sums+=(\047%s\047)\n\t\t;;\n\t"\
+         "i686) _pkgarch=\"386\"\n\t\tsha1sums+=(\047%s\047)\n\t\t;;\n\t"\
+         "x86_64) _pkgarch=\"amd64\"\n\t\tsha1sums+=(\047%s\047)\n\t\t;;\n"\
+         "esac\n",
+         arm5, arm6, arm7, i386, x86
+}' $sumtext)
+
+(( $? == 0 )) && rm "$sumtext"
+
+{
+  rm "$buildfile"
+  exec awk -v newsums="$newsums" '
+    /^case/,/^esac$/ {
+      if (!w) { print newsums; w++ }
+        next
+      }; 1
+      END { if (!w) print newsums }
+  ' > "$buildfile"
+} < "$buildfile"
+
+# vim: set ts=2 sw=2 et:
