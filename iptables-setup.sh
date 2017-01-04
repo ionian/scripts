@@ -3,7 +3,7 @@
 ip=/sbin/iptables
 name_example="xx.xx.xx.xx"
 admins="$name_example"
-sshers="$name.example"
+sshers="$name_example"
 mysqlrs="zz.zz.zz.zz/23"
 tcpservices="80 443 22"
 udpservices=""
