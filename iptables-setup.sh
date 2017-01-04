@@ -133,7 +133,6 @@ $ip -A OUTPUT -p tcp -m tcp --dport 25 -j ACCEPT
 $ip -A INPUT -p tcp -m tcp --dport 1:1024 -j DROP
 $ip -A INPUT -p udp -m udp --dport 1:1024 -j DROP
 
-
 echo "OK. Check rules with iptables -L -n"
 
 # end :)
