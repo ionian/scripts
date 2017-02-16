@@ -41,6 +41,16 @@ for ssher in $sshers ; do
       $ip -A OUTPUT -d $ssher -p tcp -m tcp --sport 22 -j ACCEPT
 done
 
+# stop any null packets
+$ip -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+
+# stop any syn packets
+$ip -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+
+# stop any xmas packets
+$ip -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+
+
 # allow access to mysql port to iReport on sugar
 for mysql in $mysqlrs ; do
       $ip -A INPUT -s $mysql -p tcp -m tcp --dport 3306 -j ACCEPT
