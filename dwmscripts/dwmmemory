@@ -1,0 +1,6 @@
+#!/bin/bash
+
+mem(){
+  mem="$(awk '/^Mem/ {print $3}' <(free -m))"
+  echo -e "\x04$mem\x01"
+}

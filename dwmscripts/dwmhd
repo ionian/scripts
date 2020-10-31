@@ -1,0 +1,14 @@
+#!/bin/bash
+
+hdd(){
+  hd=( $(awk '
+    {i=$5} /boot/ {a=i}; /root/ {b=i}; /home/ {c=i}; /media/ {d=i}
+    END {if (NR>=11) print a,b,c,d; else print a,b,c}
+           ' <(df -P)) )
+  drives="${#hd[@]}"
+  if (( drives > 3 )); then
+    echo -e "\x08${hd[@]:0:3} \x06${hd[@]:3:1}\x01"
+  else
+    echo -e "\x08${hd[@]}\x01"
+  fi
+}

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+music(){
+  track="$(mpc current)"
+  artist="${track%%- *}"
+  title="${track#*- }"
+  [[ -n $artist ]] && echo -e "\x06$artist\x01\x08$title\x01 •"
+}

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+bat(){
+  onl="$(</sys/class/power_supply/ADP1/online)"
+  charge="$(</sys/class/power_supply/BAT1/capacity)"
+  if [[ $onl -eq 0 && $charge -ge 15 ]]; then
+    echo -e "BAT \x04$charge%\x01"
+  elif [[ $onl -eq 0 && $charge -le 14 ]]; then
+    echo -e "BAT \x03$charge%\x01"
+  else
+    echo -e "AC \x06$charge%\x01"
+  fi
+}

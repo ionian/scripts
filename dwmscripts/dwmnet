@@ -1,0 +1,11 @@
+#!/bin/bash
+
+int(){
+   if [ "$(ping -c1 8.8.8.8)" ]
+     echo -e "\x06ON\x01"
+   else
+     echo -e "\x03NO\x01"
+   fi
+}
+#  host google.com>/dev/null &&
+#  echo -e "\x06ON\x01" || echo -e "\x03NO\x01"
