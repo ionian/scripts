@@ -1,11 +1,4 @@
-#!/usr/bin/env bash
-# Status script for dwm
-# colours: 01:normal 02:white 03:red 04:green 05:yellow 06:blue
-# 07:cyan 08:magenta 09:grey
-
-# Copyright (c) 2013-2015 Jason W Ryan
-# The MIT License (MIT) http://opensource.org/licenses/MIT
-
+#!/usr/bin/env sh
 
 music(){
   track="$(mpc current)"
@@ -15,8 +8,8 @@ music(){
 }
 
 bat(){
-  onl="$(</sys/class/power_supply/ADP1/online)"
-  charge="$(</sys/class/power_supply/BAT1/capacity)"
+  onl="$(</sys/class/power_supply/AC/online)"
+  charge="$(</sys/class/power_supply/BAT0/capacity)"
   if [[ $onl -eq 0 && $charge -ge 15 ]]; then
     echo -e "BAT \x04$charge%\x01"
   elif [[ $onl -eq 0 && $charge -le 14 ]]; then
@@ -97,10 +90,10 @@ int(){
 }
 
 dte(){
-  dte="$(date "+%I:%M")"
+  dte="$(date "+%Y/%m/%d-%I:%M")"
   echo -e "\x02$dte\x01"
 }
 
 # Pipe to status bar
 xsetroot -name "$(music) $(bat) • CPU $(cpu) MEM $(mem) • HDD $(hdd) \
-• EML $(eml) PKG $(pac) AUR $(ups)$(aur) • NET $(int) • $(dte) "
+#• EML $(eml) PKG $(pac) AUR $(ups)$(aur) • NET $(int) • $(dte) "
